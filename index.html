@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Сложение сил — симуляция</title>
+<style>
+  :root {
+    --bg:#e8ecf0; --panel:#fff; --panel-border:#ccd3db; --text:#2b3440;
+    --muted:#62707f; --panel-bg:rgba(255,255,255,.95); --panel-bg2:rgba(255,255,255,.9);
+    --input-bg:#fff; --input-border:#9aa6b4; --soft:#f4f7fa;
+  }
+  body.dark {
+    --bg:#12161d; --panel:#1c222c; --panel-border:#3a4250; --text:#dfe6ee;
+    --muted:#8a97a5; --panel-bg:rgba(28,34,44,.95); --panel-bg2:rgba(28,34,44,.9);
+    --input-bg:#12161d; --input-border:#3a4250; --soft:#232a36;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif; transition: background .3s, color .3s; }
+
+  #app {
+    position: relative;
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    padding: 10px 0;
+  }
+
+  /* Шапка: заголовок + панель управления */
+  #header {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  #title {
+    font-size: 32px; font-weight: 800; letter-spacing: 4px;
+    text-transform: uppercase; white-space: nowrap;
+    pointer-events: none; user-select: none;
+    background: linear-gradient(90deg, #6699FF, #FF5D5D, #00CC66, #6699FF);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+  @keyframes shimmer { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }
+
+  #topBar {
+    display: flex; gap: 18px; align-items: center;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 8px 14px; font-size: 15px; color: var(--text);
+    box-shadow: 0 2px 10px rgba(40,50,60,.12);
+    user-select: none; white-space: nowrap;
+  }
+  #topBar label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  #topBar input[type=checkbox] { width: 17px; height: 17px; accent-color: #00CC66; cursor: pointer; }
+
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.1); }
+  .sw-f1{background:#6699FF} .sw-f2{background:#FF5D5D} .sw-fr{background:#00CC66}
+
+  .iconbtn {
+    background: none; border: 1px solid var(--panel-border); border-radius: 8px;
+    color: var(--text); font-size: 16px; line-height: 1; padding: 4px 8px;
+    cursor: pointer;
+  }
+  .iconbtn:hover { background: var(--soft); }
+
+  /* Центральная область с полем */
+  #canvasContainer {
+    flex: 1 1 auto;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 0;
+    position: relative;
+    padding: 10px 20px;
+  }
+
+  #canvasWrap {
+    position: relative;
+    /* размер задаётся JS */
+  }
+  canvas { display: block; }
+
+  /* Оверлеи внутри поля */
+  #scaleInfo {
+    position: absolute; top: 8px; right: 10px; z-index: 10;
+    background: var(--panel-bg2); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 6px 12px; font-size: 14px; color: var(--text);
+  }
+  #scaleInfo b { color: var(--text); }
+
+  #frZero {
+    position: absolute; z-index: 12; transform: translate(-50%,-50%);
+    background: var(--panel-bg2); border: 1px solid #00CC66; color: #00CC66;
+    border-radius: 8px; padding: 4px 12px; font-size: 18px; font-weight: 700;
+    display: none; pointer-events: none;
+  }
+
+  #formula {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: -46px;
+    z-index: 10; max-width: 94vw;
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    border-radius: 10px; padding: 12px 22px; font-size: 19px; color: var(--text);
+    white-space: nowrap; box-shadow: 0 2px 10px rgba(40,50,60,.12);
+  }
+  #formula .f1{color:#6699FF;font-weight:700} #formula .f2{color:#FF5D5D;font-weight:700} #formula .fr{color:#00CC66;font-weight:700}
+
+  /* Подвал: кнопка и подпись */
+  #footer {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px;
+    padding: 10px 10px 6px;
+  }
+
+  #bottomBar { display: flex; align-items: center; }
+  #btnExercise {
+    padding: 12px 28px; cursor: pointer; border: none; border-radius: 8px;
+    background: #37506b; color: #fff; font-size: 16px; font-weight: 600;
+    box-shadow: 0 2px 10px rgba(40,50,60,.25);
+  }
+  #btnExercise:hover { background: #2b3f55; }
+
+  #author {
+    font-size: 11px; color: var(--muted);
+    align-self: flex-end; margin-right: 10px;
+  }
+
+  /* Панель упражнений */
+  #exercise {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 20; width: min(1120px, 95vw);
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    border-radius: 12px; padding: 16px 44px 16px 20px; font-size: 15px; color: var(--text);
+    box-shadow: 0 6px 22px rgba(40,50,60,.20); display: none;
+  }
+  #exercise h3 { margin: 0 0 6px; font-size: 18px; }
+  .ex-progress { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+  #exClose {
+    position: absolute; top: 8px; right: 12px; width: 30px; height: 30px; line-height: 28px;
+    background: none; border: none; color: #d32f2f; font-size: 26px; font-weight: bold; cursor: pointer; padding: 0;
+  }
+  #exClose:hover { color: #ff0000; }
+
+  #exLine { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  #exLine .row { display: flex; align-items: center; gap: 7px; }
+  #exLine .row span { min-width: 50px; font-weight: 600; font-size: 18px; }
+  #exLine input[type=number] {
+    width: 74px; padding: 5px 6px; border: 1px solid var(--input-border); border-radius: 6px;
+    font-size: 15px; text-align: center; background: var(--input-bg); color: var(--text);
+  }
+  #exLine button { padding: 8px 16px; border: none; border-radius: 7px; cursor: pointer; font-size: 15px; font-weight: 600; }
+  #exCheck { background: #00CC66; color: #fff; }
+  #exCheck:disabled { background: #9db8a0; cursor: default; }
+  #exNext { background: #37506b; color: #fff; display: none; }
+  #exNext:hover { background: #2b3f55; }
+
+  #exFeedback { margin-top: 12px; font-weight: 700; font-size: 20px; display: inline-block; vertical-align: middle; }
+  #exFeedback.ok { color: #00CC66; }
+  #exFeedback.bad { color: #FF5D5D; }
+
+  #exFormula {
+    margin-top: 12px; margin-left: 10px; padding: 8px 12px; border-radius: 8px;
+    background: var(--soft); font-size: 20px; line-height: 1.4; color: var(--text);
+    display: none; vertical-align: middle;
+  }
+  #exFormula .f1{color:#6699FF;font-weight:700} #exFormula .f2{color:#FF5D5D;font-weight:700} #exFormula .fr{color:#00CC66;font-weight:700}
+
+  #exSummary { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--panel-border);
+    display: none; font-size: 20px; white-space: nowrap; }
+  #exSummary b { color: #00CC66; }
+
+  #theoryModal {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    background: rgba(0,0,0,.5); align-items: center; justify-content: center;
+  }
+  #theoryModal .box {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px;
+    max-width: 620px; width: 92vw; padding: 24px 28px; color: var(--text);
+    box-shadow: 0 10px 40px rgba(0,0,0,.4); position: relative;
+  }
+  #theoryModal h2 { margin: 0 0 14px; font-size: 22px; }
+  #theoryModal p { font-size: 16px; line-height: 1.5; margin: 0 0 12px; }
+  #theoryModal .f1{color:#6699FF;font-weight:700} #theoryModal .f2{color:#FF5D5D;font-weight:700} #theoryModal .fr{color:#00CC66;font-weight:700}
+  #theoryClose { position: absolute; top: 12px; right: 16px; font-size: 26px; color: #d32f2f;
+    background: none; border: none; cursor: pointer; line-height: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div id="title">Сложение сил</div>
+    <div id="topBar">
+      <label><input type="checkbox" id="cbF1" checked><span class="swatch sw-f1"></span> F<sub>1</sub></label>
+      <label><input type="checkbox" id="cbF2" checked><span class="swatch sw-f2"></span> F<sub>2</sub></label>
+      <label><input type="checkbox" id="cbFR"><span class="swatch sw-fr"></span> F<sub>R</sub></label>
+      <button class="iconbtn" id="btnHelp" title="Теория">?</button>
+      <button class="iconbtn" id="btnMute" title="Звук">🔊</button>
+      <button class="iconbtn" id="btnTheme" title="Тема">🌙</button>
+    </div>
+  </div>
+
+  <div id="canvasContainer">
+    <div id="canvasWrap">
+      <div id="scaleInfo">Масштаб: сторона клетки = <b>1 Н</b></div>
+      <div id="frZero">F<sub>R</sub> = 0</div>
+      <div id="formula"></div>
+    </div>
+  </div>
+
+  <div id="footer">
+    <div id="bottomBar">
+      <button id="btnExercise">Упражнения</button>
+    </div>
+    <div id="author">АлексеЕВа</div>
+  </div>
+
+  <div id="exercise">
+    <button id="exClose" title="Закрыть">×</button>
+    <h3>Упражнения</h3>
+    <div class="ex-progress" id="exProgress"></div>
+    <div id="exLine">
+      <div class="row"><span>F<sub>1</sub>, Н:</span><input type="number" id="inF1" step="1" min="1" max="10"></div>
+      <div class="row"><span>F<sub>2</sub>, Н:</span><input type="number" id="inF2" step="1" min="1" max="10"></div>
+      <div class="row"><span>F<sub>R</sub>, Н:</span><input type="number" id="inFR" step="1" min="0" max="20"></div>
+      <button id="exCheck">Проверить</button>
+      <button id="exNext">Следующий пример</button>
+    </div>
+    <div id="exFeedback"></div>
+    <div id="exFormula"></div>
+    <div id="exSummary"></div>
+  </div>
+
+  <div id="theoryModal">
+    <div class="box">
+      <button id="theoryClose">×</button>
+      <h2>Как складывать силы</h2>
+      <p>Сила — это вектор: у неё есть <b>длина</b> (модуль, в ньютонах) и <b>направление</b> (влево или вправо).</p>
+      <p><b>Сонаправленные</b> (одинаковое направление):<br>
+        <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> + <span class="f2">F<sub>2</sub></span> — складываем длины, направление то же.</p>
+      <p><b>Противоположно направленные</b>:<br>
+        <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> − <span class="f2">F<sub>2</sub></span> — вычитаем длины, направление — туда, где сила больше.</p>
+      <p>Если силы равны и направлены в разные стороны, то <span class="fr">F<sub>R</sub></span> = 0 — тело в равновесии.</p>
+      <p style="color:var(--muted);font-size:14px">Совет: двигайте концы стрелок мышкой, чтобы менять силу.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+const CELL = 1;
+const GRID_HALF_X = 18; // 36 клеток в ширину
+const GRID_HALF_Y = 4;  // 8 клеток в высоту
+const FIELD_LIFT_CELLS = 2.5; // поднять поле на 2,5 клетки
+const BALL_RADIUS = 0.55;
+const VECTOR_RADIUS = 0.06;
+const CONE_RADIUS = 0.18;
+const CONE_HEIGHT = 0.5;
+const BALL_Z = 0.30;
+const PLANE_Z = 0;
+const LERP = 0.22;
+
+const state = {
+  f1: { mag: 3, dir: +1 },
+  f2: { mag: 5, dir: +1 },
+  showF1: true, showF2: true, showFR: false,
+  exActive: false, exIndex: 0, exTasks: [], exErrors: 0,
+  exCorrectCount: 0, exLocked: false, exCurrent: null,
+  soundOn: true, dark: false
+};
+
+let renderer, scene, camera;
+let ballGroup, planeMat, lineMat, edgeMat, ballMat;
+let vecF1, vecF2, vecFR;
+let dragState = null;
+let raycaster, pointerNDC;
+const dragPlane = new THREE.Plane();
+
+const COLOR_F1_HEX = '#6699FF', COLOR_F2_HEX = '#FF5D5D', COLOR_FR_HEX = '#00CC66';
+const COLOR_F1_INT = 0x6699FF, COLOR_F2_INT = 0xFF5D5D, COLOR_FR_INT = 0x00CC66;
+
+/* ---------- звук ---------- */
+let audioCtx = null;
+function ensureAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+function tone(freq, dur, type, vol){
+  if(!state.soundOn || !audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  o.connect(g); g.connect(audioCtx.destination);
+  const t = audioCtx.currentTime;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.start(t); o.stop(t + dur);
+}
+function playDing(){ ensureAudio(); if(!audioCtx)return; tone(880,.25,'sine',.25); setTimeout(()=>tone(1320,.3,'sine',.22),90); }
+function playBup(){ ensureAudio(); if(!audioCtx)return; tone(220,.22,'triangle',.3); }
+
+/* ---------- спрайт-подпись ---------- */
+function makeLabelSprite(text, colorHex) {
+  const canvas = document.createElement('canvas');
+  const S = 1024; canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,S,S);
+  const baseY = S*0.60;
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=colorHex;
+  let letterX;
+  if (text==='F_R'){ letterX=S/2-130;
+    ctx.font='600 460px "Segoe UI", Arial'; ctx.fillText('F',letterX,baseY);
+    ctx.font='600 280px "Segoe UI", Arial'; ctx.fillText('R',S/2+150,baseY+80);
+  } else { letterX=S/2-50; ctx.font='600 460px "Segoe UI", Arial'; ctx.fillText(text,S/2,baseY); }
+  const half=150, lineY=baseY-320, ax=letterX-half, ay=letterX+half;
+  ctx.strokeStyle=colorHex; ctx.lineWidth=22;
+  ctx.beginPath(); ctx.moveTo(ax,lineY); ctx.lineTo(ay,lineY); ctx.stroke();
+  ctx.fillStyle=colorHex; ctx.beginPath();
+  ctx.moveTo(ay,lineY); ctx.lineTo(ay-55,lineY-60); ctx.lineTo(ay-55,lineY+60); ctx.closePath(); ctx.fill();
+  const tex=new THREE.CanvasTexture(canvas); tex.anisotropy=4; tex.colorSpace=THREE.SRGBColorSpace;
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  spr.renderOrder=999; return spr;
+}
+const labelCache={};
+function labelSprite(text,colorHex){ const k=text+colorHex; if(!labelCache[k])labelCache[k]=makeLabelSprite(text,colorHex); return labelCache[k].clone(); }
+
+function lighten(hex, amt){
+  const c=new THREE.Color(hex);
+  c.r=Math.min(1,c.r+amt); c.g=Math.min(1,c.g+amt); c.b=Math.min(1,c.b+amt);
+  return c;
+}
+
+/* ---------- расчёт размера поля ---------- */
+function computeFieldSize(){
+  const container = document.getElementById('canvasContainer');
+  const availW = container.clientWidth - 40;
+  const availH = container.clientHeight - 60; // запас для формулы снизу
+  // размер клетки: чтобы 36×8 влезло
+  const cellByW = availW / (GRID_HALF_X*2);
+  const cellByH = availH / (GRID_HALF_Y*2);
+  const cell = Math.max(20, Math.min(40, Math.floor(Math.min(cellByW, cellByH))));
+  return {
+    cell,
+    width: GRID_HALF_X*2*cell,
+    height: GRID_HALF_Y*2*cell
+  };
+}
+
+/* ---------- инициализация ---------- */
+function init() {
+  const wrap = document.getElementById('canvasWrap');
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  wrap.appendChild(renderer.domElement);
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xe8ecf0);
+
+  camera = new THREE.OrthographicCamera();
+  camera.position.set(0, 0, 10);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a97a5, 1.0));
+  const dir=new THREE.DirectionalLight(0xffffff,1.1); dir.position.set(8,14,14);
+  dir.castShadow=true; dir.shadow.mapSize.set(1024,1024);
+  dir.shadow.camera.left=-22; dir.shadow.camera.right=22;
+  dir.shadow.camera.top=14; dir.shadow.camera.bottom=-14; dir.shadow.camera.near=1; dir.shadow.camera.far=60;
+  scene.add(dir);
+
+  buildVerticalField();
+  buildBall();
+
+  vecF1 = buildVector(COLOR_F1_INT, COLOR_F1_HEX, 'F₁', true);
+  vecF2 = buildVector(COLOR_F2_INT, COLOR_F2_HEX, 'F₂', false);
+  vecFR = buildVector(COLOR_FR_INT, COLOR_FR_HEX, 'F_R', true);
+  scene.add(vecF1.group, vecF2.group, vecFR.group);
+
+  raycaster=new THREE.Raycaster(); pointerNDC=new THREE.Vector2();
+
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+
+  document.getElementById('cbF1').addEventListener('change', e=>{ if(state.exActive){e.target.checked=state.showF1;return;} state.showF1=e.target.checked; updateVectors(); });
+  document.getElementById('cbF2').addEventListener('change', e=>{ if(state.exActive){e.target.checked=state.showF2;return;} state.showF2=e.target.checked; updateVectors(); });
+  document.getElementById('cbFR').addEventListener('change', e=>{ if(state.exActive){e.target.checked=state.showFR;return;} state.showFR=e.target.checked; updateVectors(); });
+
+  document.getElementById('btnExercise').addEventListener('click', startExercise);
+  document.getElementById('exCheck').addEventListener('click', checkExercise);
+  document.getElementById('exNext').addEventListener('click', nextExercise);
+  document.getElementById('exClose').addEventListener('click', closeExercise);
+  document.getElementById('btnHelp').addEventListener('click', ()=>{ document.getElementById('theoryModal').style.display='flex'; });
+  document.getElementById('theoryClose').addEventListener('click', ()=>{ document.getElementById('theoryModal').style.display='none'; });
+  document.getElementById('theoryModal').addEventListener('click', e=>{ if(e.target.id==='theoryModal') e.target.style.display='none'; });
+  document.getElementById('btnMute').addEventListener('click', ()=>{ state.soundOn=!state.soundOn; document.getElementById('btnMute').textContent=state.soundOn?'🔊':'🔇'; if(state.soundOn) ensureAudio(); });
+  document.getElementById('btnTheme').addEventListener('click', ()=>{ state.dark=!state.dark; document.body.classList.toggle('dark',state.dark); document.getElementById('btnTheme').textContent=state.dark?'☀️':'🌙'; applyTheme(); });
+
+  updateVectors();
+  onResize();
+  animate();
+}
+
+function applyTheme(){
+  if(state.dark){
+    scene.background.set(0x12161d);
+    planeMat.color.set(0x232a36); planeMat.opacity=0.95;
+    lineMat.color.set(0x3a4250); edgeMat.color.set(0x5a6472);
+    ballMat.color.set(0x5a6b82);
+  } else {
+    scene.background.set(0xe8ecf0);
+    planeMat.color.set(0xFFFFFF); planeMat.opacity=0.89;
+    lineMat.color.set(0x8899aa); edgeMat.color.set(0x556677);
+    ballMat.color.set(0x3D4A5C);
+  }
+}
+
+/* ---------- позиционирование оверлеев ---------- */
+function worldToScreen(v){
+  const p=v.clone().project(camera);
+  const r=renderer.domElement.getBoundingClientRect();
+  return { x:r.left+(p.x*.5+.5)*r.width, y:r.top+(-p.y*.5+.5)*r.height };
+}
+function positionOverlays(){
+  const wrap = document.getElementById('canvasWrap');
+  const rect = wrap.getBoundingClientRect();
+  const height = GRID_HALF_Y*2*CELL, width = GRID_HALF_X*2*CELL;
+  const topMid = worldToScreen(new THREE.Vector3(0, height/2, PLANE_Z));
+  const topRight = worldToScreen(new THREE.Vector3(width/2, height/2, PLANE_Z));
+  const botMid = worldToScreen(new THREE.Vector3(0, -height/2, PLANE_Z));
+  const frPos = worldToScreen(new THREE.Vector3(0, 0.95, BALL_Z));
+  const scale = document.getElementById('scaleInfo');
+  const formula = document.getElementById('formula');
+  const frZero = document.getElementById('frZero');
+  scale.style.top = '8px';
+  scale.style.left = 'auto';
+  scale.style.right = '10px';
+  formula.style.bottom = '-46px';
+  formula.style.top = 'auto';
+  frZero.style.left = (frPos.x - rect.left) + 'px';
+  frZero.style.top = (frPos.y - rect.top) + 'px';
+}
+function scheduleOverlays(){
+  positionOverlays();
+  requestAnimationFrame(positionOverlays);
+  requestAnimationFrame(()=>requestAnimationFrame(positionOverlays));
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(positionOverlays);
+  window.addEventListener('load', positionOverlays);
+}
+
+/* ---------- поле ---------- */
+function buildVerticalField(){
+  const width=GRID_HALF_X*2*CELL, height=GRID_HALF_Y*2*CELL;
+  planeMat=new THREE.MeshBasicMaterial({color:0xFFFFFF,transparent:true,opacity:0.89,side:THREE.DoubleSide});
+  const plane=new THREE.Mesh(new THREE.PlaneGeometry(width,height),planeMat);
+  plane.position.set(0,0,PLANE_Z); plane.receiveShadow=true; scene.add(plane);
+  lineMat=new THREE.LineBasicMaterial({color:0x8899aa});
+  const pts=[];
+  for(let i=-GRID_HALF_X;i<=GRID_HALF_X;i++){const x=i*CELL;pts.push(new THREE.Vector3(x,-height/2,PLANE_Z+0.002));pts.push(new THREE.Vector3(x,height/2,PLANE_Z+0.002));}
+  for(let j=-GRID_HALF_Y;j<=GRID_HALF_Y;j++){const y=j*CELL;pts.push(new THREE.Vector3(-width/2,y,PLANE_Z+0.002));pts.push(new THREE.Vector3(width/2,y,PLANE_Z+0.002));}
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
+  edgeMat=new THREE.LineBasicMaterial({color:0x556677});
+  const x0=-width/2,x1=width/2,y0=-height/2,y1=height/2;
+  const ep=[new THREE.Vector3(x0,y0,PLANE_Z+0.003),new THREE.Vector3(x1,y0,PLANE_Z+0.003),new THREE.Vector3(x1,y0,PLANE_Z+0.003),new THREE.Vector3(x1,y1,PLANE_Z+0.003),new THREE.Vector3(x1,y1,PLANE_Z+0.003),new THREE.Vector3(x0,y1,PLANE_Z+0.003),new THREE.Vector3(x0,y1,PLANE_Z+0.003),new THREE.Vector3(x0,y0,PLANE_Z+0.003)];
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ep),edgeMat));
+}
+function buildBall(){
+  ballGroup=new THREE.Group(); ballGroup.position.set(0,0,BALL_Z);
+  ballMat=new THREE.MeshBasicMaterial({color:0x3D4A5C,side:THREE.DoubleSide});
+  ballGroup.add(new THREE.Mesh(new THREE.CircleGeometry(BALL_RADIUS,32),ballMat));
+  scene.add(ballGroup);
+}
+
+/* ---------- вектор + lerp ---------- */
+function buildVector(colorInt,colorHex,labelText,labelAbove){
+  const group=new THREE.Group(); group.position.set(0,0,BALL_Z);
+  const mat=new THREE.MeshBasicMaterial({color:colorInt,side:THREE.DoubleSide});
+  const shaftGeo=new THREE.CylinderGeometry(VECTOR_RADIUS,VECTOR_RADIUS,1,20); shaftGeo.rotateZ(-Math.PI/2);
+  const shaft=new THREE.Mesh(shaftGeo,mat); group.add(shaft);
+  const coneGeo=new THREE.ConeGeometry(CONE_RADIUS,CONE_HEIGHT,22); coneGeo.rotateZ(-Math.PI/2);
+  const cone=new THREE.Mesh(coneGeo,mat); group.add(cone);
+  const label=labelSprite(labelText,colorHex); label.scale.set(2.2,2.2,1); group.add(label);
+  group.userData={shaft,cone,label,mat,dir:1,labelAbove,baseColor:new THREE.Color(colorInt),hoverColor:lighten(colorHex,0.25),
+    animLen:0,targetLen:0,visible:false,wasVisible:false};
+  return {group};
+}
+function setVectorTarget(vecObj,lenN,dir,visible){
+  const u=vecObj.group.userData;
+  u.dir=dir; u.targetLen=Math.max(0.4,lenN*CELL); u.visible=visible;
+  if(visible && !u.wasVisible){ u.animLen=0; }
+  if(!visible){ vecObj.group.visible=false; }
+  u.wasVisible=visible;
+}
+function buildVectorGeometry(vecObj){
+  const g=vecObj.group, u=g.userData;
+  const len=u.animLen, dir=u.dir;
+  const shaftLen=Math.max(0.05,len-CONE_HEIGHT);
+  u.shaft.scale.set(shaftLen,1,1); u.shaft.position.set(dir*shaftLen/2,0,0);
+  u.cone.rotation.z=(dir===1)?0:Math.PI; u.cone.position.set(dir*(shaftLen+CONE_HEIGHT/2),0,0);
+  const labelY=u.labelAbove?0.9:-0.9;
+  u.label.position.set(dir*len*0.5,labelY,0);
+}
+
+/* ---------- обновление ---------- */
+function updateVectors(){
+  const showF1=state.showF1, showF2=state.showF2;
+  vecF1.group.position.y=0.2; vecF2.group.position.y=-0.2;
+  vecF1.group.position.z=BALL_Z; vecF2.group.position.z=BALL_Z;
+  vecFR.group.position.y=0; vecFR.group.position.z=BALL_Z+0.30;
+  setVectorTarget(vecF1,state.f1.mag,state.f1.dir,showF1);
+  setVectorTarget(vecF2,state.f2.mag,state.f2.dir,showF2);
+  const fr=computeResultant();
+  const frActive=state.showFR&&showF1&&showF2&&!state.exActive;
+  const frVisible = frActive && fr.value !== 0;
+  setVectorTarget(vecFR, Math.abs(fr.value) || 1, Math.sign(fr.value)||1, frVisible);
+  const frZero=document.getElementById('frZero');
+  frZero.style.display=(frActive && fr.value===0)?'block':'none';
+  const cbFR=document.getElementById('cbFR');
+  if(!state.exActive) cbFR.disabled=!(showF1&&showF2);
+  updateFormula();
+}
+function computeResultant(){ const v1=state.f1.dir*state.f1.mag,v2=state.f2.dir*state.f2.mag; return {value:v1+v2,same:state.f1.dir===state.f2.dir}; }
+function fmtN(n){ return String(n).replace('.',','); }
+function updateFormula(){
+  const el=document.getElementById('formula');
+  if(state.exActive){el.style.display='none';return;}
+  el.style.display='block';
+  const a=state.f1.mag,b=state.f2.mag,d1=state.f1.dir,d2=state.f2.dir;
+  let html='';
+  if(d1===d2){const side=d1>0?'вправо':'влево';
+    html=`Векторы сонаправлены (${side}): <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> + <span class="f2">F<sub>2</sub></span> = ${fmtN(a)} + ${fmtN(b)} = <span class="fr">${fmtN(a+b)} (Н)</span>`;
+  } else {
+    if(a>b) html=`Векторы противоположны: <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> − <span class="f2">F<sub>2</sub></span> = ${fmtN(a)} − ${fmtN(b)} = <span class="fr">${fmtN(a-b)} (Н)</span> (${d1>0?'вправо':'влево'})`;
+    else if(b>a) html=`Векторы противоположны: <span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${fmtN(b)} − ${fmtN(a)} = <span class="fr">${fmtN(b-a)} (Н)</span> (${d2>0?'вправо':'влево'})`;
+    else html=`Векторы противоположны и равны: <span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${fmtN(b)} − ${fmtN(a)} = <span class="fr">0 (Н)</span>`;
+  }
+  el.innerHTML=html; positionOverlays();
+}
+
+/* ---------- drag + hover ---------- */
+function setPointerNDC(ev){ const r=renderer.domElement.getBoundingClientRect();
+  pointerNDC.x=((ev.clientX-r.left)/r.width)*2-1; pointerNDC.y=-((ev.clientY-r.top)/r.height)*2+1; }
+function pickVec(ev){
+  setPointerNDC(ev); raycaster.setFromCamera(pointerNDC,camera);
+  const cands=[vecF1,vecF2,vecFR].filter(v=>v.group.userData.visible);
+  cands.sort((A,B)=>B.group.position.z-A.group.position.z);
+  for(const c of cands){ if(raycaster.intersectObject(c.group,true).length>0) return c; }
+  return null;
+}
+function onPointerDown(ev){
+  if(state.exActive||state.showFR) return;
+  const v=pickVec(ev);
+  if(v){ dragState={key:(v===vecF1?'f1':'f2'),obj:v}; renderer.domElement.setPointerCapture(ev.pointerId); ev.preventDefault(); }
+}
+function onPointerMove(ev){
+  if(dragState){
+    setPointerNDC(ev); raycaster.setFromCamera(pointerNDC,camera);
+    dragPlane.set(new THREE.Vector3(0,0,1),-BALL_Z);
+    const p=new THREE.Vector3(); if(!raycaster.ray.intersectPlane(dragPlane,p)) return;
+    const dir=p.x>=0?+1:-1; let mag=Math.round(Math.abs(p.x)/CELL); mag=Math.max(1,Math.min(10,mag));
+    if(dragState.key==='f1'){state.f1.mag=mag;state.f1.dir=dir;} else {state.f2.mag=mag;state.f2.dir=dir;}
+    updateVectors(); ev.preventDefault();
+  } else {
+    const v=pickVec(ev);
+    [vecF1,vecF2,vecFR].forEach(o=>{ o.group.userData.mat.color.copy(o.group.userData.baseColor); });
+    if(v) v.group.userData.mat.color.copy(v.group.userData.hoverColor);
+  }
+}
+function onPointerUp(ev){ if(!dragState)return; dragState=null; try{renderer.domElement.releasePointerCapture(ev.pointerId);}catch(e){} }
+
+/* ---------- упражнения ---------- */
+const EX_TOTAL=5;
+function makeExerciseTasks(){
+  const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1)); const tasks=[];
+  {const m=rnd(2,8);tasks.push({f1:m,f2:m,dir1:+1,dir2:+1});}
+  {let a=rnd(2,8),b=rnd(2,8);while(b===a)b=rnd(2,8);tasks.push({f1:a,f2:b,dir1:+1,dir2:+1});}
+  {const m=rnd(2,8);tasks.push({f1:m,f2:m,dir1:-1,dir2:+1});}
+  {const f1=rnd(5,9),f2=rnd(2,f1-1);tasks.push({f1:f1,f2:f2,dir1:+1,dir2:+1});}
+  {const right=rnd(4,9),left=rnd(1,right-1);tasks.push({f1:left,f2:right,dir1:-1,dir2:+1});}
+  for(let i=tasks.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[tasks[i],tasks[j]]=[tasks[j],tasks[i]];}
+  return tasks;
+}
+function startExercise(){
+  state.exActive=true; state.exTasks=makeExerciseTasks(); state.exIndex=0;
+  state.exErrors=0; state.exCorrectCount=0; state.exLocked=false;
+  document.getElementById('exercise').style.display='block';
+  document.getElementById('formula').style.display='none';
+  document.getElementById('btnExercise').style.display='none';
+  ['cbF1','cbF2','cbFR'].forEach(id=>document.getElementById(id).disabled=true);
+  state.showFR=false; loadExerciseTask();
+}
+function loadExerciseTask(){
+  const t=state.exTasks[state.exIndex]; state.exCurrent=t; state.exLocked=false;
+  state.showF1=true; state.showF2=true;
+  state.f1.mag=t.f1; state.f1.dir=t.dir1; state.f2.mag=t.f2; state.f2.dir=t.dir2; state.showFR=false;
+  updateVectorsForExercise();
+  document.getElementById('exProgress').textContent=`Пример ${state.exIndex+1} из ${EX_TOTAL}`;
+  ['inF1','inF2','inFR'].forEach(id=>{const el=document.getElementById(id);el.value='';el.disabled=false;});
+  document.getElementById('exCheck').disabled=false; document.getElementById('exCheck').style.display='inline-block';
+  document.getElementById('exNext').style.display='none';
+  document.getElementById('exFeedback').textContent=''; document.getElementById('exFeedback').className='';
+  document.getElementById('exFormula').style.display='none'; document.getElementById('exSummary').style.display='none';
+}
+function updateVectorsForExercise(){
+  setVectorTarget(vecF1,state.f1.mag,state.f1.dir,true);
+  setVectorTarget(vecF2,state.f2.mag,state.f2.dir,true);
+  vecF1.group.position.y=0.2; vecF2.group.position.y=-0.2;
+  vecF1.group.position.z=BALL_Z; vecF2.group.position.z=BALL_Z;
+  vecFR.group.position.z=BALL_Z+0.30; vecFR.group.position.y=0;
+  const fr=computeResultant();
+  const frVisible = state.showFR && fr.value !== 0;
+  setVectorTarget(vecFR, Math.abs(fr.value) || 1, Math.sign(fr.value)||1, frVisible);
+  document.getElementById('frZero').style.display=(state.showFR && fr.value===0)?'block':'none';
+}
+function checkExercise(){
+  if(state.exLocked) return;
+  const t=state.exCurrent;
+  const aF1=parseInt(document.getElementById('inF1').value,10);
+  const aF2=parseInt(document.getElementById('inF2').value,10);
+  const aFR=parseInt(document.getElementById('inFR').value,10);
+  const cFR=t.dir1===t.dir2?t.f1+t.f2:Math.abs(t.f1-t.f2);
+  const okF1=aF1===t.f1, okF2=aF2===t.f2, okFR=aFR===cFR;
+  const fb=document.getElementById('exFeedback'), fx=document.getElementById('exFormula');
+  if(okF1&&okF2&&okFR){
+    state.exLocked=true; state.exCorrectCount++; state.showFR=true; updateVectorsForExercise(); playDing();
+    fb.textContent='Верно!'; fb.className='ok';
+    if(t.dir1===t.dir2) fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> + <span class="f2">F<sub>2</sub></span> = ${t.f1} + ${t.f2} = <span class="fr">${t.f1+t.f2} (Н)</span>`;
+    else if(t.f1>t.f2) fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> − <span class="f2">F<sub>2</sub></span> = ${t.f1} − ${t.f2} = <span class="fr">${t.f1-t.f2} (Н)</span> (направлена ${t.dir1>0?'вправо':'влево'})`;
+    else if(t.f2>t.f1) fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${t.f2} − ${t.f1} = <span class="fr">${t.f2-t.f1} (Н)</span> (направлена ${t.dir2>0?'вправо':'влево'})`;
+    else fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${t.f2} − ${t.f1} = <span class="fr">0 (Н)</span>`;
+    fx.style.display='inline-block';
+    document.getElementById('exCheck').style.display='none';
+    ['inF1','inF2','inFR'].forEach(id=>document.getElementById(id).disabled=true);
+    document.getElementById('exNext').style.display='inline-block';
+    if(state.exIndex===EX_TOTAL-1) showSummary();
+  } else {
+    state.exErrors++; playBup();
+    const mk=(v)=>v?'<span style="color:#00CC66">✓</span>':'<span style="color:#FF5D5D">✗</span>';
+    let hint='';
+    if(!okF1) hint+=' F₁ — посчитай клетки от тела до конца синей стрелки.';
+    if(!okF2) hint+=' F₂ — посчитай клетки от тела до конца красной стрелки.';
+    if(!okFR) hint+=' F_R — посмотри на направление и модуль результирующей.';
+    fb.innerHTML=`F₁ ${mk(okF1)} · F₂ ${mk(okF2)} · F_R ${mk(okFR)}${hint?' —'+hint:''}`;
+    fb.className='bad'; fx.style.display='none';
+  }
+}
+function showSummary(){
+  const sum=document.getElementById('exSummary'); sum.style.display='block';
+  sum.innerHTML=`Задание выполнено! Верно выполненных заданий: <b>${state.exCorrectCount}</b> из ${EX_TOTAL}. Допущено ошибок: <b>${state.exErrors}</b>`;
+  document.getElementById('exNext').style.display='none';
+}
+function nextExercise(){
+  if(state.exIndex<EX_TOTAL-1){state.exIndex++;loadExerciseTask();}
+  else {showSummary();document.getElementById('exNext').style.display='none';}
+}
+function closeExercise(){
+  state.exActive=false; state.exLocked=false;
+  document.getElementById('exercise').style.display='none';
+  document.getElementById('formula').style.display='block';
+  document.getElementById('btnExercise').style.display='inline-block';
+  ['cbF1','cbF2','cbFR'].forEach(id=>document.getElementById(id).disabled=false);
+  state.showF1=true; state.showF2=true; state.showFR=document.getElementById('cbFR').checked;
+  state.f1={mag:3,dir:+1}; state.f2={mag:5,dir:+1}; updateVectors();
+}
+
+/* ---------- resize ---------- */
+function onResize(){
+  const wrap = document.getElementById('canvasWrap');
+  const { cell, width, height } = computeFieldSize();
+  // размер canvas в пикселях
+  wrap.style.width = width + 'px';
+  wrap.style.height = height + 'px';
+  wrap.style.transform = `translateY(${-FIELD_LIFT_CELLS * cell}px)`;
+  renderer.setSize(width, height);
+  // ортографическая камера: ровно 36×8 клеток
+  camera.left = -GRID_HALF_X;
+  camera.right = GRID_HALF_X;
+  camera.top = GRID_HALF_Y;
+  camera.bottom = -GRID_HALF_Y;
+  camera.updateProjectionMatrix();
+  positionOverlays();
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  [vecF1,vecF2,vecFR].forEach(v=>{
+    const u=v.group.userData;
+    if(u.visible){
+      v.group.visible=true;
+      const d=u.targetLen-u.animLen;
+      if(Math.abs(d)>0.001){ u.animLen+=d*LERP; buildVectorGeometry(v); }
+      else if(u.animLen!==u.targetLen){ u.animLen=u.targetLen; buildVectorGeometry(v); }
+    } else v.group.visible=false;
+  });
+  renderer.render(scene,camera);
+}
+
+init();
+scheduleOverlays();
+window.addEventListener('keydown', e=>{ if(e.key==='Escape'){ document.getElementById('theoryModal').style.display='none'; if(state.exActive) closeExercise(); } });
+</script>
+</body>
+</html>
