@@ -14,175 +14,90 @@
     --muted:#8a97a5; --panel-bg:rgba(28,34,44,.95); --panel-bg2:rgba(28,34,44,.9);
     --input-bg:#12161d; --input-border:#3a4250; --soft:#232a36;
   }
-
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
     background: var(--bg); color: var(--text);
     font-family: "Segoe UI", Arial, sans-serif; transition: background .3s, color .3s; }
-
-  #app {
-    position: relative;
-    width: 100vw; height: 100vh;
-    display: flex; flex-direction: column;
-    padding: 10px 0;
-  }
-
-  /* Шапка: заголовок + панель управления */
-  #header {
-    flex: 0 0 auto;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 10px;
-    padding: 0 10px;
-  }
-
-  #title {
-    font-size: 32px; font-weight: 800; letter-spacing: 4px;
-    text-transform: uppercase; white-space: nowrap;
-    pointer-events: none; user-select: none;
+  #app { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; padding: 10px 0; }
+  #header { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 10px; }
+  #title { font-size: 32px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase;
+    white-space: nowrap; pointer-events: none; user-select: none;
     background: linear-gradient(90deg, #6699FF, #FF5D5D, #00CC66, #6699FF);
-    background-size: 300% 100%;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; color: transparent;
-    animation: shimmer 4s linear infinite;
-  }
+    background-size: 300% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; color: transparent; animation: shimmer 4s linear infinite; }
   @keyframes shimmer { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }
-
-  #topBar {
-    display: flex; gap: 18px; align-items: center;
-    background: var(--panel-bg);
-    border: 1px solid var(--panel-border); border-radius: 10px;
-    padding: 8px 14px; font-size: 15px; color: var(--text);
-    box-shadow: 0 2px 10px rgba(40,50,60,.12);
-    user-select: none; white-space: nowrap;
-  }
+  #topBar { display: flex; gap: 18px; align-items: center; background: var(--panel-bg);
+    border: 1px solid var(--panel-border); border-radius: 10px; padding: 8px 14px;
+    font-size: 15px; color: var(--text); box-shadow: 0 2px 10px rgba(40,50,60,.12);
+    user-select: none; white-space: nowrap; }
   #topBar label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
   #topBar input[type=checkbox] { width: 17px; height: 17px; accent-color: #00CC66; cursor: pointer; }
-
   .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.1); }
   .sw-f1{background:#6699FF} .sw-f2{background:#FF5D5D} .sw-fr{background:#00CC66}
-
-  .iconbtn {
-    background: none; border: 1px solid var(--panel-border); border-radius: 8px;
-    color: var(--text); font-size: 16px; line-height: 1; padding: 4px 8px;
-    cursor: pointer;
-  }
+  .iconbtn { background: none; border: 1px solid var(--panel-border); border-radius: 8px;
+    color: var(--text); font-size: 16px; line-height: 1; padding: 4px 8px; cursor: pointer; }
   .iconbtn:hover { background: var(--soft); }
-
-  /* Центральная область с полем */
-  #canvasContainer {
-    flex: 1 1 auto;
-    display: flex; align-items: center; justify-content: center;
-    min-height: 0;
-    position: relative;
-    padding: 10px 20px;
-  }
-
-  #canvasWrap {
-    position: relative;
-    /* размер задаётся JS */
-  }
+  #canvasContainer { flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+    min-height: 0; position: relative; padding: 10px 20px; }
+  #canvasWrap { position: relative; }
   canvas { display: block; }
-
-  /* Оверлеи внутри поля */
-  #scaleInfo {
-    position: absolute; top: 8px; right: 10px; z-index: 10;
+  #scaleInfo { position: absolute; top: 8px; right: 10px; z-index: 10;
     background: var(--panel-bg2); border: 1px solid var(--panel-border);
-    border-radius: 8px; padding: 6px 12px; font-size: 14px; color: var(--text);
-  }
+    border-radius: 8px; padding: 6px 12px; font-size: 14px; color: var(--text); }
   #scaleInfo b { color: var(--text); }
-
-  #frZero {
-    position: absolute; z-index: 12; transform: translate(-50%,-50%);
-    background: var(--panel-bg2); border: 1px solid #00CC66; color: #00CC66;
-    border-radius: 8px; padding: 4px 12px; font-size: 18px; font-weight: 700;
-    display: none; pointer-events: none;
-  }
-
-  #formula {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    bottom: -46px;
-    z-index: 10; max-width: 94vw;
-    background: var(--panel-bg); border: 1px solid var(--panel-border);
+  #frZero { position: absolute; z-index: 12; transform: translate(-50%,-50%);
+    background: var(--panel-bg2); border: 2px solid #00CC66; color: #00CC66;
+    border-radius: 8px; padding: 6px 16px; font-size: 28px; font-weight: 800;
+    display: none; pointer-events: none; box-shadow: 0 3px 10px rgba(0,0,0,0.15); letter-spacing: 0.5px; }
+  #formula { position: absolute; left: 50%; transform: translateX(-50%); bottom: -46px;
+    z-index: 10; max-width: 94vw; background: var(--panel-bg); border: 1px solid var(--panel-border);
     border-radius: 10px; padding: 12px 22px; font-size: 19px; color: var(--text);
-    white-space: nowrap; box-shadow: 0 2px 10px rgba(40,50,60,.12);
-  }
+    white-space: nowrap; box-shadow: 0 2px 10px rgba(40,50,60,.12); }
   #formula .f1{color:#6699FF;font-weight:700} #formula .f2{color:#FF5D5D;font-weight:700} #formula .fr{color:#00CC66;font-weight:700}
-
-  /* Подвал: кнопка и подпись */
-  #footer {
-    flex: 0 0 auto;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 10px;
-    padding: 10px 10px 6px;
-  }
-
+  #footer { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 10px 6px; }
   #bottomBar { display: flex; align-items: center; }
-  #btnExercise {
-    padding: 12px 28px; cursor: pointer; border: none; border-radius: 8px;
+  #btnExercise { padding: 12px 28px; cursor: pointer; border: none; border-radius: 8px;
     background: #37506b; color: #fff; font-size: 16px; font-weight: 600;
-    box-shadow: 0 2px 10px rgba(40,50,60,.25);
-  }
+    box-shadow: 0 2px 10px rgba(40,50,60,.25); }
   #btnExercise:hover { background: #2b3f55; }
-
-  #author {
-    font-size: 11px; color: var(--muted);
-    align-self: flex-end; margin-right: 10px;
-  }
-
-  /* Панель упражнений */
-  #exercise {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    z-index: 20; width: min(1120px, 95vw);
-    background: var(--panel-bg); border: 1px solid var(--panel-border);
+  #author { font-size: 11px; color: var(--muted); align-self: flex-end; margin-right: 10px; }
+  #exercise { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 20; width: min(1120px, 95vw); background: var(--panel-bg); border: 1px solid var(--panel-border);
     border-radius: 12px; padding: 16px 44px 16px 20px; font-size: 15px; color: var(--text);
-    box-shadow: 0 6px 22px rgba(40,50,60,.20); display: none;
-  }
+    box-shadow: 0 6px 22px rgba(40,50,60,.20); display: none; }
   #exercise h3 { margin: 0 0 6px; font-size: 18px; }
   .ex-progress { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-
-  #exClose {
-    position: absolute; top: 8px; right: 12px; width: 30px; height: 30px; line-height: 28px;
-    background: none; border: none; color: #d32f2f; font-size: 26px; font-weight: bold; cursor: pointer; padding: 0;
-  }
+  #exClose { position: absolute; top: 8px; right: 12px; width: 30px; height: 30px; line-height: 28px;
+    background: none; border: none; color: #d32f2f; font-size: 26px; font-weight: bold; cursor: pointer; padding: 0; }
   #exClose:hover { color: #ff0000; }
-
   #exLine { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
   #exLine .row { display: flex; align-items: center; gap: 7px; }
   #exLine .row span { min-width: 50px; font-weight: 600; font-size: 18px; }
-  #exLine input[type=number] {
-    width: 74px; padding: 5px 6px; border: 1px solid var(--input-border); border-radius: 6px;
-    font-size: 15px; text-align: center; background: var(--input-bg); color: var(--text);
-  }
+  .f1-label { color: #6699FF; font-weight: 700; }
+  .f2-label { color: #FF5D5D; font-weight: 700; }
+  .fr-label { color: #00CC66; font-weight: 700; }
+  #exLine input[type=number] { width: 74px; padding: 5px 6px; border: 1px solid var(--input-border); border-radius: 6px;
+    font-size: 15px; text-align: center; background: var(--input-bg); color: var(--text); }
   #exLine button { padding: 8px 16px; border: none; border-radius: 7px; cursor: pointer; font-size: 15px; font-weight: 600; }
   #exCheck { background: #00CC66; color: #fff; }
   #exCheck:disabled { background: #9db8a0; cursor: default; }
   #exNext { background: #37506b; color: #fff; display: none; }
   #exNext:hover { background: #2b3f55; }
-
   #exFeedback { margin-top: 12px; font-weight: 700; font-size: 20px; display: inline-block; vertical-align: middle; }
   #exFeedback.ok { color: #00CC66; }
   #exFeedback.bad { color: #FF5D5D; }
-
-  #exFormula {
-    margin-top: 12px; margin-left: 10px; padding: 8px 12px; border-radius: 8px;
+  #exFormula { margin-top: 12px; margin-left: 10px; padding: 8px 12px; border-radius: 8px;
     background: var(--soft); font-size: 20px; line-height: 1.4; color: var(--text);
-    display: none; vertical-align: middle;
-  }
+    display: none; vertical-align: middle; }
   #exFormula .f1{color:#6699FF;font-weight:700} #exFormula .f2{color:#FF5D5D;font-weight:700} #exFormula .fr{color:#00CC66;font-weight:700}
-
   #exSummary { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--panel-border);
     display: none; font-size: 20px; white-space: nowrap; }
   #exSummary b { color: #00CC66; }
-
-  #theoryModal {
-    position: fixed; inset: 0; z-index: 50; display: none;
-    background: rgba(0,0,0,.5); align-items: center; justify-content: center;
-  }
-  #theoryModal .box {
-    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px;
+  #theoryModal { position: fixed; inset: 0; z-index: 50; display: none;
+    background: rgba(0,0,0,.5); align-items: center; justify-content: center; }
+  #theoryModal .box { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px;
     max-width: 620px; width: 92vw; padding: 24px 28px; color: var(--text);
-    box-shadow: 0 10px 40px rgba(0,0,0,.4); position: relative;
-  }
+    box-shadow: 0 10px 40px rgba(0,0,0,.4); position: relative; }
   #theoryModal h2 { margin: 0 0 14px; font-size: 22px; }
   #theoryModal p { font-size: 16px; line-height: 1.5; margin: 0 0 12px; }
   #theoryModal .f1{color:#6699FF;font-weight:700} #theoryModal .f2{color:#FF5D5D;font-weight:700} #theoryModal .fr{color:#00CC66;font-weight:700}
@@ -203,7 +118,6 @@
       <button class="iconbtn" id="btnTheme" title="Тема">🌙</button>
     </div>
   </div>
-
   <div id="canvasContainer">
     <div id="canvasWrap">
       <div id="scaleInfo">Масштаб: сторона клетки = <b>1 Н</b></div>
@@ -211,22 +125,18 @@
       <div id="formula"></div>
     </div>
   </div>
-
   <div id="footer">
-    <div id="bottomBar">
-      <button id="btnExercise">Упражнения</button>
-    </div>
+    <div id="bottomBar"><button id="btnExercise">Упражнения</button></div>
     <div id="author">АлексеЕВа</div>
   </div>
-
   <div id="exercise">
     <button id="exClose" title="Закрыть">×</button>
     <h3>Упражнения</h3>
     <div class="ex-progress" id="exProgress"></div>
     <div id="exLine">
-      <div class="row"><span>F<sub>1</sub>, Н:</span><input type="number" id="inF1" step="1" min="1" max="10"></div>
-      <div class="row"><span>F<sub>2</sub>, Н:</span><input type="number" id="inF2" step="1" min="1" max="10"></div>
-      <div class="row"><span>F<sub>R</sub>, Н:</span><input type="number" id="inFR" step="1" min="0" max="20"></div>
+      <div class="row"><span class="f1-label">F<sub>1</sub>, Н:</span><input type="number" id="inF1" step="1" min="1" max="10"></div>
+      <div class="row"><span class="f2-label">F<sub>2</sub>, Н:</span><input type="number" id="inF2" step="1" min="1" max="10"></div>
+      <div class="row"><span class="fr-label">F<sub>R</sub>, Н:</span><input type="number" id="inFR" step="1" min="0" max="20"></div>
       <button id="exCheck">Проверить</button>
       <button id="exNext">Следующий пример</button>
     </div>
@@ -234,7 +144,6 @@
     <div id="exFormula"></div>
     <div id="exSummary"></div>
   </div>
-
   <div id="theoryModal">
     <div class="box">
       <button id="theoryClose">×</button>
@@ -250,12 +159,13 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
 const CELL = 1;
-const GRID_HALF_X = 18; // 36 клеток в ширину
-const GRID_HALF_Y = 4;  // 8 клеток в высоту
-const FIELD_LIFT_CELLS = 2.5; // поднять поле на 2,5 клетки
+const GRID_HALF_X = 18;
+const GRID_HALF_Y = 4;
+const FIELD_LIFT_CELLS = 2.5;
 const BALL_RADIUS = 0.55;
 const VECTOR_RADIUS = 0.06;
 const CONE_RADIUS = 0.18;
@@ -280,8 +190,9 @@ let dragState = null;
 let raycaster, pointerNDC;
 const dragPlane = new THREE.Plane();
 
-const COLOR_F1_HEX = '#6699FF', COLOR_F2_HEX = '#FF5D5D', COLOR_FR_HEX = '#00CC66';
-const COLOR_F1_INT = 0x6699FF, COLOR_F2_INT = 0xFF5D5D, COLOR_FR_INT = 0x00CC66;
+const COLOR_F1_HEX = '#6699FF', COLOR_F1_INT = 0x6699FF;
+const COLOR_F2_HEX = '#FF5D5D', COLOR_F2_INT = 0xFF5D5D;
+const COLOR_FR_HEX = '#00CC66', COLOR_FR_INT = 0x00CC66;
 
 /* ---------- звук ---------- */
 let audioCtx = null;
@@ -334,16 +245,11 @@ function lighten(hex, amt){
 function computeFieldSize(){
   const container = document.getElementById('canvasContainer');
   const availW = container.clientWidth - 40;
-  const availH = container.clientHeight - 60; // запас для формулы снизу
-  // размер клетки: чтобы 36×8 влезло
+  const availH = container.clientHeight - 60;
   const cellByW = availW / (GRID_HALF_X*2);
   const cellByH = availH / (GRID_HALF_Y*2);
   const cell = Math.max(20, Math.min(40, Math.floor(Math.min(cellByW, cellByH))));
-  return {
-    cell,
-    width: GRID_HALF_X*2*cell,
-    height: GRID_HALF_Y*2*cell
-  };
+  return { cell, width: GRID_HALF_X*2*cell, height: GRID_HALF_Y*2*cell };
 }
 
 /* ---------- инициализация ---------- */
@@ -425,10 +331,8 @@ function positionOverlays(){
   const wrap = document.getElementById('canvasWrap');
   const rect = wrap.getBoundingClientRect();
   const height = GRID_HALF_Y*2*CELL, width = GRID_HALF_X*2*CELL;
-  const topMid = worldToScreen(new THREE.Vector3(0, height/2, PLANE_Z));
-  const topRight = worldToScreen(new THREE.Vector3(width/2, height/2, PLANE_Z));
-  const botMid = worldToScreen(new THREE.Vector3(0, -height/2, PLANE_Z));
-  const frPos = worldToScreen(new THREE.Vector3(0, 0.95, BALL_Z));
+  // Подняли надпись на высоту одной клетки (было 0.95, стало 1.95)
+  const frPos = worldToScreen(new THREE.Vector3(0, 1.95, BALL_Z));
   const scale = document.getElementById('scaleInfo');
   const formula = document.getElementById('formula');
   const frZero = document.getElementById('frZero');
@@ -493,7 +397,7 @@ function setVectorTarget(vecObj,lenN,dir,visible){
 }
 function buildVectorGeometry(vecObj){
   const g=vecObj.group, u=g.userData;
-  const len=u.animLen, dir=u.dir;
+  const len=u.targetLen, dir=u.dir;
   const shaftLen=Math.max(0.05,len-CONE_HEIGHT);
   u.shaft.scale.set(shaftLen,1,1); u.shaft.position.set(dir*shaftLen/2,0,0);
   u.cone.rotation.z=(dir===1)?0:Math.PI; u.cone.position.set(dir*(shaftLen+CONE_HEIGHT/2),0,0);
@@ -511,28 +415,52 @@ function updateVectors(){
   setVectorTarget(vecF2,state.f2.mag,state.f2.dir,showF2);
   const fr=computeResultant();
   const frActive=state.showFR&&showF1&&showF2&&!state.exActive;
-  const frVisible = frActive && fr.value !== 0;
-  setVectorTarget(vecFR, Math.abs(fr.value) || 1, Math.sign(fr.value)||1, frVisible);
+  const frVisible = frActive && fr.magnitude !== 0;
+  setVectorTarget(vecFR, fr.magnitude || 1, fr.direction || 1, frVisible);
   const frZero=document.getElementById('frZero');
-  frZero.style.display=(frActive && fr.value===0)?'block':'none';
+  frZero.style.display=(frActive && fr.magnitude===0)?'block':'none';
   const cbFR=document.getElementById('cbFR');
   if(!state.exActive) cbFR.disabled=!(showF1&&showF2);
   updateFormula();
 }
-function computeResultant(){ const v1=state.f1.dir*state.f1.mag,v2=state.f2.dir*state.f2.mag; return {value:v1+v2,same:state.f1.dir===state.f2.dir}; }
+
+function calculateResultant(f1, dir1, f2, dir2) {
+  const a = Number(f1), b = Number(f2);
+  const d1 = Math.sign(Number(dir1)) || 1;
+  const d2 = Math.sign(Number(dir2)) || 1;
+  const signed = a * d1 + b * d2;
+  const magnitude = Math.abs(signed);
+  return {
+    signed,
+    magnitude,
+    direction: signed === 0 ? 0 : Math.sign(signed),
+    sameDirection: d1 === d2
+  };
+}
+function computeResultant(){
+  return calculateResultant(state.f1.mag, state.f1.dir, state.f2.mag, state.f2.dir);
+}
 function fmtN(n){ return String(n).replace('.',','); }
+
 function updateFormula(){
   const el=document.getElementById('formula');
   if(state.exActive){el.style.display='none';return;}
   el.style.display='block';
-  const a=state.f1.mag,b=state.f2.mag,d1=state.f1.dir,d2=state.f2.dir;
-  let html='';
-  if(d1===d2){const side=d1>0?'вправо':'влево';
-    html=`Векторы сонаправлены (${side}): <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> + <span class="f2">F<sub>2</sub></span> = ${fmtN(a)} + ${fmtN(b)} = <span class="fr">${fmtN(a+b)} (Н)</span>`;
+  const a=state.f1.mag,b=state.f2.mag;
+  const result=computeResultant();
+  let html = '';
+  if(result.sameDirection){
+    const side=result.direction>0?'вправо':'влево';
+    html += `Векторы сонаправлены (${side}): <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> + <span class="f2">F<sub>2</sub></span> = ${fmtN(a)} + ${fmtN(b)} = <span class="fr">${fmtN(result.magnitude)} (Н)</span>`;
+  } else if(result.magnitude===0){
+    html += `Векторы противоположны и равны: <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> − <span class="f2">F<sub>2</sub></span> = ${fmtN(a)} − ${fmtN(b)} = <span class="fr">0 (Н)</span>`;
   } else {
-    if(a>b) html=`Векторы противоположны: <span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> − <span class="f2">F<sub>2</sub></span> = ${fmtN(a)} − ${fmtN(b)} = <span class="fr">${fmtN(a-b)} (Н)</span> (${d1>0?'вправо':'влево'})`;
-    else if(b>a) html=`Векторы противоположны: <span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${fmtN(b)} − ${fmtN(a)} = <span class="fr">${fmtN(b-a)} (Н)</span> (${d2>0?'вправо':'влево'})`;
-    else html=`Векторы противоположны и равны: <span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${fmtN(b)} − ${fmtN(a)} = <span class="fr">0 (Н)</span>`;
+    const firstIsBigger=a>b;
+    const big=firstIsBigger?a:b, small=firstIsBigger?b:a;
+    const bigClass=firstIsBigger?'f1':'f2', smallClass=firstIsBigger?'f2':'f1';
+    const bigSub=firstIsBigger?'1':'2', smallSub=firstIsBigger?'2':'1';
+    const side=result.direction>0?'вправо':'влево';
+    html += `Векторы противоположны: <span class="fr">F<sub>R</sub></span> = <span class="${bigClass}">F<sub>${bigSub}</sub></span> − <span class="${smallClass}">F<sub>${smallSub}</sub></span> = ${fmtN(big)} − ${fmtN(small)} = <span class="fr">${fmtN(result.magnitude)} (Н)</span> (${side})`;
   }
   el.innerHTML=html; positionOverlays();
 }
@@ -570,29 +498,45 @@ function onPointerUp(ev){ if(!dragState)return; dragState=null; try{renderer.dom
 
 /* ---------- упражнения ---------- */
 const EX_TOTAL=5;
+
 function makeExerciseTasks(){
-  const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1)); const tasks=[];
-  {const m=rnd(2,8);tasks.push({f1:m,f2:m,dir1:+1,dir2:+1});}
-  {let a=rnd(2,8),b=rnd(2,8);while(b===a)b=rnd(2,8);tasks.push({f1:a,f2:b,dir1:+1,dir2:+1});}
-  {const m=rnd(2,8);tasks.push({f1:m,f2:m,dir1:-1,dir2:+1});}
-  {const f1=rnd(5,9),f2=rnd(2,f1-1);tasks.push({f1:f1,f2:f2,dir1:+1,dir2:+1});}
-  {const right=rnd(4,9),left=rnd(1,right-1);tasks.push({f1:left,f2:right,dir1:-1,dir2:+1});}
-  for(let i=tasks.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[tasks[i],tasks[j]]=[tasks[j],tasks[i]];}
+  const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+  const tasks=[];
+  
+  { const m = rnd(2, 8); tasks.push({ f1: m, f2: m, dir1: +1, dir2: +1, ans: m + m }); }
+  { let a = rnd(2, 8), b = rnd(2, 8); while (b === a) b = rnd(2, 8); tasks.push({ f1: a, f2: b, dir1: -1, dir2: -1, ans: a + b }); }
+  { const f1 = rnd(4, 9), f2 = rnd(1, f1 - 1); tasks.push({ f1, f2, dir1: -1, dir2: +1, ans: f1 - f2 }); }
+  { const f2 = rnd(4, 9), f1 = rnd(1, f2 - 1); tasks.push({ f1, f2, dir1: +1, dir2: -1, ans: f2 - f1 }); }
+  { const m = rnd(2, 8); tasks.push({ f1: m, f2: m, dir1: -1, dir2: +1, ans: 0 }); }
+  
+  for (let i = tasks.length - 1; i > 0; i--) { 
+    const j = Math.floor(Math.random() * (i + 1)); 
+    [tasks[i], tasks[j]] = [tasks[j], tasks[i]]; 
+  }
   return tasks;
 }
+
 function startExercise(){
-  state.exActive=true; state.exTasks=makeExerciseTasks(); state.exIndex=0;
+  state.exActive=true;
+  state.exTasks=makeExerciseTasks();
+  state.exIndex=0;
   state.exErrors=0; state.exCorrectCount=0; state.exLocked=false;
   document.getElementById('exercise').style.display='block';
   document.getElementById('formula').style.display='none';
   document.getElementById('btnExercise').style.display='none';
   ['cbF1','cbF2','cbFR'].forEach(id=>document.getElementById(id).disabled=true);
-  state.showFR=false; loadExerciseTask();
+  state.showFR=false;
+  loadExerciseTask();
 }
+
 function loadExerciseTask(){
-  const t=state.exTasks[state.exIndex]; state.exCurrent=t; state.exLocked=false;
+  const t=state.exTasks[state.exIndex];
+  state.exCurrent=t;
+  state.exLocked=false;
   state.showF1=true; state.showF2=true;
-  state.f1.mag=t.f1; state.f1.dir=t.dir1; state.f2.mag=t.f2; state.f2.dir=t.dir2; state.showFR=false;
+  state.f1.mag=t.f1; state.f1.dir=t.dir1;
+  state.f2.mag=t.f2; state.f2.dir=t.dir2;
+  state.showFR=false;
   updateVectorsForExercise();
   document.getElementById('exProgress').textContent=`Пример ${state.exIndex+1} из ${EX_TOTAL}`;
   ['inF1','inF2','inFR'].forEach(id=>{const el=document.getElementById(id);el.value='';el.disabled=false;});
@@ -601,49 +545,78 @@ function loadExerciseTask(){
   document.getElementById('exFeedback').textContent=''; document.getElementById('exFeedback').className='';
   document.getElementById('exFormula').style.display='none'; document.getElementById('exSummary').style.display='none';
 }
+
 function updateVectorsForExercise(){
-  setVectorTarget(vecF1,state.f1.mag,state.f1.dir,true);
-  setVectorTarget(vecF2,state.f2.mag,state.f2.dir,true);
+  const t=state.exCurrent;
+  setVectorTarget(vecF1,t.f1,t.dir1,true);
+  setVectorTarget(vecF2,t.f2,t.dir2,true);
   vecF1.group.position.y=0.2; vecF2.group.position.y=-0.2;
   vecF1.group.position.z=BALL_Z; vecF2.group.position.z=BALL_Z;
   vecFR.group.position.z=BALL_Z+0.30; vecFR.group.position.y=0;
-  const fr=computeResultant();
-  const frVisible = state.showFR && fr.value !== 0;
-  setVectorTarget(vecFR, Math.abs(fr.value) || 1, Math.sign(fr.value)||1, frVisible);
-  document.getElementById('frZero').style.display=(state.showFR && fr.value===0)?'block':'none';
+  const ans = t.ans;
+  const sign = Math.sign(t.f1 * t.dir1 + t.f2 * t.dir2);
+  const dir = ans === 0 ? 1 : sign;
+  const frVisible=state.showFR && ans !== 0;
+  setVectorTarget(vecFR, ans || 1, dir, frVisible);
+  document.getElementById('frZero').style.display=(state.showFR && ans===0)?'block':'none';
 }
+
 function checkExercise(){
   if(state.exLocked) return;
   const t=state.exCurrent;
-  const aF1=parseInt(document.getElementById('inF1').value,10);
-  const aF2=parseInt(document.getElementById('inF2').value,10);
-  const aFR=parseInt(document.getElementById('inFR').value,10);
-  const cFR=t.dir1===t.dir2?t.f1+t.f2:Math.abs(t.f1-t.f2);
-  const okF1=aF1===t.f1, okF2=aF2===t.f2, okFR=aFR===cFR;
+
+  const rawF1=document.getElementById('inF1').value.trim();
+  const rawF2=document.getElementById('inF2').value.trim();
+  const rawFR=document.getElementById('inFR').value.trim();
+  const aF1=Number(rawF1);
+  const aF2=Number(rawF2);
+  const aFR=Number(rawFR);
+
+  const okF1 = rawF1!=='' && Number.isFinite(aF1) && aF1===t.f1;
+  const okF2 = rawF2!=='' && Number.isFinite(aF2) && aF2===t.f2;
+  const okFR = rawFR!=='' && Number.isFinite(aFR) && aFR===t.ans;
+
   const fb=document.getElementById('exFeedback'), fx=document.getElementById('exFormula');
-  if(okF1&&okF2&&okFR){
-    state.exLocked=true; state.exCorrectCount++; state.showFR=true; updateVectorsForExercise(); playDing();
+
+  if(okF1 && okF2 && okFR){
+    state.exLocked=true; state.exCorrectCount++; state.showFR=true;
+    updateVectorsForExercise(); playDing();
     fb.textContent='Верно!'; fb.className='ok';
-    if(t.dir1===t.dir2) fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> + <span class="f2">F<sub>2</sub></span> = ${t.f1} + ${t.f2} = <span class="fr">${t.f1+t.f2} (Н)</span>`;
-    else if(t.f1>t.f2) fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> − <span class="f2">F<sub>2</sub></span> = ${t.f1} − ${t.f2} = <span class="fr">${t.f1-t.f2} (Н)</span> (направлена ${t.dir1>0?'вправо':'влево'})`;
-    else if(t.f2>t.f1) fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${t.f2} − ${t.f1} = <span class="fr">${t.f2-t.f1} (Н)</span> (направлена ${t.dir2>0?'вправо':'влево'})`;
-    else fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f2">F<sub>2</sub></span> − <span class="f1">F<sub>1</sub></span> = ${t.f2} − ${t.f1} = <span class="fr">0 (Н)</span>`;
+
+    if(t.dir1 === t.dir2){
+      const side = t.dir1 > 0 ? 'вправо' : 'влево';
+      fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> + <span class="f2">F<sub>2</sub></span> = ${t.f1} + ${t.f2} = <span class="fr">${t.ans} (Н)</span> (${side})`;
+    } else if(t.ans === 0){
+      fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="f1">F<sub>1</sub></span> − <span class="f2">F<sub>2</sub></span> = ${t.f1} − ${t.f2} = <span class="fr">0 (Н)</span>`;
+    } else {
+      const firstIsBigger = t.f1 > t.f2;
+      const big = firstIsBigger ? t.f1 : t.f2;
+      const small = firstIsBigger ? t.f2 : t.f1;
+      const bigClass = firstIsBigger ? 'f1' : 'f2';
+      const smallClass = firstIsBigger ? 'f2' : 'f1';
+      const bigSub = firstIsBigger ? '1' : '2';
+      const smallSub = firstIsBigger ? '2' : '1';
+      const side = (t.f1 * t.dir1 + t.f2 * t.dir2) > 0 ? 'вправо' : 'влево';
+      fx.innerHTML=`<span class="fr">F<sub>R</sub></span> = <span class="${bigClass}">F<sub>${bigSub}</sub></span> − <span class="${smallClass}">F<sub>${smallSub}</sub></span> = ${big} − ${small} = <span class="fr">${t.ans} (Н)</span> (${side})`;
+    }
     fx.style.display='inline-block';
     document.getElementById('exCheck').style.display='none';
     ['inF1','inF2','inFR'].forEach(id=>document.getElementById(id).disabled=true);
     document.getElementById('exNext').style.display='inline-block';
     if(state.exIndex===EX_TOTAL-1) showSummary();
   } else {
-    state.exErrors++; playBup();
+    state.exErrors++;
+    playBup();
     const mk=(v)=>v?'<span style="color:#00CC66">✓</span>':'<span style="color:#FF5D5D">✗</span>';
     let hint='';
     if(!okF1) hint+=' F₁ — посчитай клетки от тела до конца синей стрелки.';
     if(!okF2) hint+=' F₂ — посчитай клетки от тела до конца красной стрелки.';
-    if(!okFR) hint+=' F_R — посмотри на направление и модуль результирующей.';
+    if(!okFR) hint+=' F_R — определи модуль и направление результирующей.';
     fb.innerHTML=`F₁ ${mk(okF1)} · F₂ ${mk(okF2)} · F_R ${mk(okFR)}${hint?' —'+hint:''}`;
     fb.className='bad'; fx.style.display='none';
   }
 }
+
 function showSummary(){
   const sum=document.getElementById('exSummary'); sum.style.display='block';
   sum.innerHTML=`Задание выполнено! Верно выполненных заданий: <b>${state.exCorrectCount}</b> из ${EX_TOTAL}. Допущено ошибок: <b>${state.exErrors}</b>`;
@@ -667,12 +640,10 @@ function closeExercise(){
 function onResize(){
   const wrap = document.getElementById('canvasWrap');
   const { cell, width, height } = computeFieldSize();
-  // размер canvas в пикселях
   wrap.style.width = width + 'px';
   wrap.style.height = height + 'px';
   wrap.style.transform = `translateY(${-FIELD_LIFT_CELLS * cell}px)`;
   renderer.setSize(width, height);
-  // ортографическая камера: ровно 36×8 клеток
   camera.left = -GRID_HALF_X;
   camera.right = GRID_HALF_X;
   camera.top = GRID_HALF_Y;
@@ -681,18 +652,35 @@ function onResize(){
   positionOverlays();
 }
 
+/* ---------- АНИМАЦИЯ ВЕКТОРОВ ---------- */
+function updateVectorAnimation(vecObj, targetLen) {
+  const u = vecObj.group.userData;
+  const d = targetLen - u.targetLen;
+  if (Math.abs(d) > 0.001) {
+    u.targetLen += d * LERP;
+  } else {
+    u.targetLen = targetLen;
+  }
+  const len = u.targetLen;
+  const shaftLen = Math.max(0.05, len - CONE_HEIGHT);
+  u.shaft.scale.set(shaftLen,1,1); u.shaft.position.set(u.dir * shaftLen / 2, 0, 0);
+  u.cone.rotation.z = (u.dir === 1) ? 0 : Math.PI;
+  u.cone.position.set(u.dir * (shaftLen + CONE_HEIGHT / 2), 0, 0);
+  const labelY = u.labelAbove ? 0.9 : -0.9;
+  u.label.position.set(u.dir * len * 0.5,labelY,0);
+}
 function animate(){
   requestAnimationFrame(animate);
-  [vecF1,vecF2,vecFR].forEach(v=>{
-    const u=v.group.userData;
-    if(u.visible){
-      v.group.visible=true;
-      const d=u.targetLen-u.animLen;
-      if(Math.abs(d)>0.001){ u.animLen+=d*LERP; buildVectorGeometry(v); }
-      else if(u.animLen!==u.targetLen){ u.animLen=u.targetLen; buildVectorGeometry(v); }
-    } else v.group.visible=false;
+  [vecF1, vecF2, vecFR].forEach(vecObj => {
+    const u = vecObj.group.userData;
+    if (u.visible) {
+      vecObj.group.visible = true;
+      updateVectorAnimation(vecObj, u.targetLen);
+    } else {
+      vecObj.group.visible = false;
+    }
   });
-  renderer.render(scene,camera);
+  renderer.render(scene, camera);
 }
 
 init();
